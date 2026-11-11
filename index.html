@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F7F2E8">
+<title>中医每日学习</title>
+<style>
+  :root{
+    --bg:#F7F2E8; --card:#FFFDF7; --ink:#2C2A26; --sub:#6B6459;
+    --accent:#9A3B2E; --green:#3F6B52; --line:#E6DDCB; --shadow:0 2px 10px rgba(120,100,70,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:17px; line-height:1.75;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 18px}
+  h1,h2,h3{font-family:"Songti SC","Noto Serif SC",serif;font-weight:600;margin:0}
+  button{font-family:inherit;font-size:17px;border:none;cursor:pointer}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 6px;max-width:560px;margin:0 auto}
+  .brand{font-family:"Songti SC",serif;font-size:18px;letter-spacing:.08em;color:var(--accent)}
+  .streak{font-size:13px;color:var(--sub);background:#fff;border:1px solid var(--line);padding:4px 10px;border-radius:99px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 18px;box-shadow:var(--shadow)}
+  .meta{font-size:13px;color:var(--sub);letter-spacing:.03em}
+  .daynum{font-size:13px;color:var(--accent);letter-spacing:.12em;margin-bottom:6px}
+  .title{font-size:30px;line-height:1.3;margin:2px 0 6px}
+  .body p{margin:14px 0;font-size:17px}
+  .quote{margin:10px 0 0;padding:12px 14px;background:#F4EDDD;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-family:"Songti SC",serif;font-size:16px;line-height:1.9;color:#443F36}
+  .quote .from{display:block;margin-top:8px;font-family:inherit;font-size:12px;color:var(--sub);letter-spacing:.02em}
+  .btn{display:block;width:100%;min-height:56px;border-radius:14px;background:var(--accent);color:#fff;font-size:18px;letter-spacing:.04em;margin-top:18px;padding:14px 16px}
+  .btn:active{opacity:.85}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.small{min-height:46px;font-size:16px;margin-top:10px}
+  .srcbtn{background:none;color:var(--sub);font-size:13px;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
+  .disclaimer{text-align:center;font-size:12px;color:#9A9384;margin:18px 0 0;letter-spacing:.04em}
+  .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(255,253,247,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:30}
+  .tab{flex:1;background:none;padding:14px 0 12px;font-size:14px;color:var(--sub);text-align:center}
+  .tab.on{color:var(--accent);font-weight:600}
+  .tab .dot{display:block;width:4px;height:4px;border-radius:99px;background:var(--accent);margin:6px auto 0;opacity:0}
+  .tab.on .dot{opacity:1}
+  .qhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--sub);margin:4px 0 14px}
+  .tag{background:#EFE7D6;color:#7A6A4F;border-radius:6px;padding:2px 8px;font-size:12px}
+  .stem{font-size:19px;line-height:1.7;margin:0 0 18px;font-family:"Songti SC",serif}
+  .opt{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;margin:10px 0;font-size:17px;line-height:1.6;color:var(--ink);position:relative}
+  .opt .lab{display:inline-block;min-width:22px;color:var(--sub);font-size:15px;margin-right:8px}
+  .opt.right{border-color:#5C8C6E;background:#EDF5EF}
+  .opt.right .lab{color:#3F6B52}
+  .opt.wrongpick{border-color:#C0736A;background:#FBEDEA}
+  .opt.wrongpick .lab{color:#9A3B2E}
+  .opt:disabled{opacity:1}
+  .expbox{margin-top:16px;border-radius:14px;padding:14px 16px;background:#F4EDDD;font-size:16px;line-height:1.8}
+  .expbox.err{background:#FBEDEA}
+  .expbox .verdict{font-weight:600;font-family:"Songti SC",serif;font-size:17px;margin-bottom:6px}
+  .expbox.err .verdict{color:var(--accent)}
+  .expbox.ok .verdict{color:var(--green)}
+  .addwrong{font-size:13px;color:var(--accent);margin-top:8px}
+  .big{font-size:26px;font-family:"Songti SC",serif;margin:6px 0 4px}
+  .dots{display:flex;gap:8px;margin:16px 0}
+  .rdot{width:14px;height:14px;border-radius:99px;background:#D8D0C0}
+  .rdot.ok{background:#5C8C6E}
+  .rdot.no{background:#C0736A}
+  .row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px}
+  .row:last-child{border-bottom:none}
+  .row .k{color:var(--sub);font-size:15px}
+  .row .v{font-weight:600}
+  .wq{padding:14px 0;border-bottom:1px solid var(--line)}
+  .wq:last-child{border-bottom:none}
+  .wq .qt{font-size:16px;line-height:1.65;margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .wq .qs{font-size:12px;color:var(--sub)}
+  .empty{text-align:center;color:var(--sub);padding:40px 0;font-size:15px;line-height:2}
+  .mask{position:fixed;inset:0;background:rgba(40,35,28,.5);display:none;align-items:flex-end;z-index:50}
+  .mask.on{display:flex}
+  .sheet{background:var(--card);width:100%;max-height:82vh;overflow:auto;border-radius:18px 18px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
+  .sheet h3{font-size:19px;margin-bottom:4px}
+  .sheet .book{font-size:14px;color:var(--sub);margin-bottom:14px}
+  .sheet .qtext{font-family:"Songti SC",serif;font-size:16px;line-height:1.9;background:#F4EDDD;padding:14px;border-radius:10px;margin:12px 0}
+  .sheet a{color:var(--accent);font-size:14px;word-break:break-all}
+  .closebtn{margin-top:20px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">中医每日学习</div>
+  <div class="streak" id="streakTop">连续 0 天</div>
+</div>
+<div class="wrap" id="app"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-tab="today">今日<span class="dot"></span></button>
+  <button class="tab" data-tab="wrong">错题本<span class="dot"></span></button>
+  <button class="tab" data-tab="me">我的<span class="dot"></span></button>
+</div>
+<div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
+
+<script>
+(function(){
+"use strict";
+
+var KEY = "tcm_daily_v1";
+var SRC = {};
+
+var DAYS = [
+{
+  n:1, title:"阴阳", mins:4, sub:"先学会给身体分两面",
+  quotes:[
+    {book:"黄帝内经·素问",chapter:"阴阳应象大论篇第五",
+     text:"阴阳者，天地之道也，万物之纲纪，变化之父母，生杀之本始，神明之府也。",
+     url:"https://www.huangdineijing.org/docs/su_wen/yin-yang-ying-xiang-da-lun/"},
+    {book:"黄帝内经·素问",chapter:"阴阳应象大论篇第五",
+     text:"阴胜则阳病，阳胜则阴病。",
+     url:"https://www.huangdineijing.org/docs/su_wen/yin-yang-ying-xiang-da-lun/"}
+  ],
+  body:[
+    "中医看身体，第一件事是分阴阳。阴阳不是两种东西，是同一件事的两个面。",
+    "白天、活动、发热、向外，算阳。夜里、安静、偏冷、向内，算阴。放到身体里，气算阳，血算阴；体表算阳，体内算阴。",
+    "阴阳有四种关系。一是互相对立，寒和热站在两边。二是互相依靠，没有上就没有下。三是此消彼长，一边强，另一边就弱。四是走到极端会掉头，热到极点转寒。",
+    "所以中医说身体出问题，常常是阴阳偏了一边。原话是「阴胜则阳病，阳胜则阴病」。一边太强势，另一边就被拖病。",
+    "记住一句就够：阴阳是一把看「偏哪边」的尺子，不是贴在东西上的标签。"
+  ],
+  qs:[
+    {id:"q1-1",type:"tf",stem:"在中医里，「阳」可以指活动、发热、向外这些方面。",
+     opts:["对","错"], ans:0,
+     exp:"活动、温热、向外、明亮归为阳；安静、寒凉、向内、晦暗归为阴。这是中医分阴阳最基础的一刀。",
+     src:{book:"黄帝内经·素问",chapter:"阴阳应象大论篇第五",
+       text:"阴阳者，天地之道也，万物之纲纪，变化之父母，生杀之本始，神明之府也。",
+       url:"https://www.huangdineijing.org/docs/su_wen/yin-yang-ying-xiang-da-lun/",type:"典籍原文"}},
+    {id:"q1-2",type:"mc",stem:"根据阴阳学说，下列哪一项属于阴的特性？",
+     opts:["运动","外向","下降","温热"], ans:2,
+     exp:"阴的特性是静止、内守、下降、凝聚、寒冷、晦暗、抑制。运动、外向、温热都是阳的特性。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-25",
+       text:"阴的特性包括静止、内守、下降、凝聚、寒冷、晦暗、抑制等。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q1-3",type:"tf",stem:"阴阳两边是完全独立、互不影响的。",
+     opts:["对","错"], ans:1,
+     exp:"阴阳互相依靠，也互相制约。一边偏了，另一边会跟着变，所以原文说「阴胜则阳病，阳胜则阴病」。",
+     src:{book:"黄帝内经·素问",chapter:"阴阳应象大论篇第五",
+       text:"阴胜则阳病，阳胜则阴病。",
+       url:"https://www.huangdineijing.org/docs/su_wen/yin-yang-ying-xiang-da-lun/",type:"典籍原文"}}
+  ]
+},
+{
+  n:2, title:"五行", mins:4, sub:"木火土金水，怎么互相帮、互相管",
+  quotes:[
+    {book:"黄帝内经·素问",chapter:"五运行大论篇第六十七",
+     text:"气有余，则制己所胜而侮所不胜；其不及，则己所不胜，侮而乘之，己所胜，轻而侮之。",
+     url:"https://www.huangdineijing.org/docs/su_wen/wu-yun-xing-da-lun-pian/"},
+    {book:"尚书",chapter:"洪范",
+     text:"水曰润下。",
+     url:"https://ctext.org/shang-shu/great-plan/zh"}
+  ],
+  body:[
+    "五行是木、火、土、金、水。它指五种状态和方向，不是五种材料。",
+    "木往上长，火往热，土在中间，金往收，水往下。",
+    "相生是一圈顺着帮：木生火，火生土，土生金，金生水，水生木。相克是隔一个管一个：木克土，土克水，水克火，火克金，金克木。",
+    "放到身体里，肝属木，心属火，脾属土，肺属金，肾属水。",
+    "《素问·五运行大论》说「气有余，则制己所胜而侮所不胜」。意思是某一行太强，会去压它本来该管的那一行，还会反过来欺负管它的那一行。",
+    "《尚书·洪范》用四个字概括水性：「水曰润下」。往下走，能滋润。"
+  ],
+  qs:[
+    {id:"q2-1",type:"mc",stem:"以下关于五行相生关系的描述，哪一项是正确的？",
+     opts:["金生火，火生水，水生土，土生木，木生金","木生火，火生土，土生金，金生水，水生木","水生火，火生金，金生土，土生木，木生水","火生木，木生水，水生金，金生土，土生火"], ans:1,
+     exp:"相生是一圈顺着走：木生火，火生土，土生金，金生水，水生木。记成一句口诀就行：木火土金水，一圈轮着帮。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-38",
+       text:"五行相生：木生火，火生土，土生金，金生水，水生木。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q2-2",type:"mc",stem:"以下关于五行学说的说法，哪一项是正确的？",
+     opts:["五行包括风、火、土、金、水","五行之间只有相生，没有相克","五行是木、火、土、金、水五种基本元素","五行只用于算卦，和医学无关"], ans:2,
+     exp:"五行就是木、火、土、金、水。风不在五行里，风属于六淫。五行既有相生也有相克，中医用它解释脏腑之间的关系。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-40",
+       text:"五行包括木、火、土、金、水五种基本元素。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q2-3",type:"tf",stem:"五行相克里，木克的是土。",
+     opts:["对","错"], ans:0,
+     exp:"相克顺序是木克土、土克水、水克火、火克金、金克木。隔一个管一个，木跳过火去管土。",
+     src:{book:"黄帝内经·素问",chapter:"五运行大论篇第六十七",
+       text:"气有余，则制己所胜而侮所不胜。",
+       url:"https://www.huangdineijing.org/docs/su_wen/wu-yun-xing-da-lun-pian/",type:"典籍原文"}}
+  ]
+},
+{
+  n:3, title:"五脏六腑", mins:4, sub:"一个管存，一个管通",
+  quotes:[
+    {book:"黄帝内经·素问",chapter:"五脏别论篇第十一",
+     text:"所谓五脏者，藏精气而不泻也，故满而不能实。六腑者，传化物而不藏，故实而不能满也。",
+     url:"https://www.huangdineijing.org/docs/su_wen/wu-cang-bie-lun/"}
+  ],
+  body:[
+    "五脏是心、肝、脾、肺、肾。六腑是胆、胃、小肠、大肠、膀胱、三焦。",
+    "五脏像仓库，负责存精气。六腑像传送带，负责把吃进去的东西一站一站往下送。",
+    "《素问·五脏别论》写得很清楚：「所谓五脏者，藏精气而不泻也，故满而不能实。六腑者，传化物而不藏，故实而不能满也。」",
+    "翻成大白话：五脏要存得住，存满了但不能堵死；六腑要有东西经过，但不能一直满着不动。",
+    "所以五脏出问题，多见「虚」，是存不够。六腑出问题，多见「不通」，是送不走。"
+  ],
+  qs:[
+    {id:"q3-1",type:"tf",stem:"五脏的主要任务是存住精气，不是把东西一站站往下送。",
+     opts:["对","错"], ans:0,
+     exp:"原文说五脏「藏精气而不泻」，六腑「传化物而不藏」。存和送，是这两组脏腑最大的分工。",
+     src:{book:"黄帝内经·素问",chapter:"五脏别论篇第十一",
+       text:"所谓五脏者，藏精气而不泻也，故满而不能实。六腑者，传化物而不藏，故实而不能满也。",
+       url:"https://www.huangdineijing.org/docs/su_wen/wu-cang-bie-lun/",type:"典籍原文"}},
+    {id:"q3-2",type:"mc",stem:"根据藏象学说，下列关于五脏和六腑生理特点的描述，哪项是正确的？",
+     opts:["五脏主要功能是传化水谷，形态多为空腔结构","六腑的特点是「实而不满」，主要负责受盛与传化水谷","奇恒之腑包括心、肺、脾、肝、肾，形态类似腑","五脏属于奇恒之腑，功能是贮藏水谷"], ans:1,
+     exp:"五脏藏精气，特点是「满而不实」；六腑受盛传化水谷，特点是「实而不满」。有东西经过（实），但不能一直堵满（不满）。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-50",
+       text:"六腑的特点是「实而不满」，主要负责受盛与传化水谷。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q3-3",type:"tf",stem:"六腑应该一直保持装满的状态。",
+     opts:["对","错"], ans:1,
+     exp:"六腑「实而不能满」。要有东西进来，也要能送走，一直装满不动反而是病。原文还说「水谷入口则胃实而肠虚，食下则肠实而胃虚」。",
+     src:{book:"黄帝内经·素问",chapter:"五脏别论篇第十一",
+       text:"六腑者，传化物而不藏，故实而不能满也。",
+       url:"https://www.huangdineijing.org/docs/su_wen/wu-cang-bie-lun/",type:"典籍原文"}}
+  ]
+},
+{
+  n:4, title:"气血津液", mins:4, sub:"身体里跑动的三样东西",
+  quotes:[
+    {book:"难经",chapter:"二十二难",
+     text:"气主呴之，血主濡之。",
+     url:"https://m.baike.com/wiki/%E9%9A%BE%E7%BB%8F%C2%B7%E4%BA%8C%E5%8D%81%E4%BA%8C%E9%9A%BE/22307710"},
+    {book:"黄帝内经·灵枢",chapter:"决气篇第三十",
+     text:"上焦开发，宣五谷味，熏肤、充身、泽毛，若雾露之溉，是谓气。",
+     url:"https://www.huangdineijing.org/docs/ling_shu/jue-qi-di-san-shi/"}
+  ],
+  body:[
+    "气、血、津液，是身体里跑动的三样东西。",
+    "气是力量和温度。它推动身体运转，也把身体焐热。血是营养，负责滋养。津液是身体里的水，负责润。",
+    "《难经·二十二难》一句话说透：「气主呴之，血主濡之。」气负责温煦，血负责滋润。",
+    "《灵枢·决气》讲气从哪来：「上焦开发，宣五谷味，熏肤、充身、泽毛，若雾露之溉，是谓气。」吃进去的谷气往上布散，像雾露一样洒到皮肤、身体、毛发上。",
+    "气常见四个作用：推动、温煦、防御、固摄。气不够的人怕冷、没劲；血不够的人脸色淡、容易头晕。"
+  ],
+  qs:[
+    {id:"q4-1",type:"mc",stem:"关于气的温煦作用，下列哪项描述是正确的？",
+     opts:["气能温煦机体，维持相对恒定的体温，保证生命活动正常进行","气对津液起凝结和固化作用","气不足只会让体温偏高，不会出现畏寒","「气主寒之」说的就是气的寒凉功能"], ans:0,
+     exp:"气的作用之一是温煦，把身体焐住、维持体温。气不够就容易怕冷。《难经》原话是「气主呴之」，说的是温煦，不是寒凉。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-157",
+       text:"气的温煦作用主要表现为温煦机体，维持相对恒定的体温。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工改写"}},
+    {id:"q4-2",type:"mc",stem:"以下哪项最准确地描述了气的推动作用的主要表现？",
+     opts:["激发和促进人体的生长发育、脏腑功能、精血津液的生成与运行","使骨骼颜色变红","让内脏变凉","让肢体变蓝"], ans:0,
+     exp:"推动作用就是「推着长、推着跑」：长身体、脏腑干活、血和津液流动，都靠气推。其余三项是明显编出来的说法。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-156",
+       text:"气的推动作用表现为激发促进生长发育与生殖、脏腑经络功能、精血津液生成运行以及精神活动。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q4-3",type:"tf",stem:"「气主呴之，血主濡之」是说气负责温煦、血负责滋润。",
+     opts:["对","错"], ans:0,
+     exp:"呴是温煦，濡是滋润。八个字把气和血的分工说完了。",
+     src:{book:"难经",chapter:"二十二难",text:"气主呴之，血主濡之。",
+       url:"https://m.baike.com/wiki/%E9%9A%BE%E7%BB%8F%C2%B7%E4%BA%8C%E5%8D%81%E4%BA%8C%E9%9A%BE/22307710",type:"典籍原文"}}
+  ]
+},
+{
+  n:5, title:"经络", mins:4, sub:"身体里那张网",
+  quotes:[
+    {book:"黄帝内经·灵枢",chapter:"经脉篇第十",
+     text:"经脉者，所以能决死生，处百病，调虚实，不可不通。",
+     url:"https://qihuang.vip/content-124089.html"}
+  ],
+  body:[
+    "经络是身体里的一张网，由经脉和络脉组成。",
+    "经脉是主干，竖着走，位置深。络脉是经脉分出来的支线，横竖交错，铺到全身，有的很浅，浮在皮肤附近。",
+    "《灵枢·经脉》开篇就说「经脉者，所以能决死生，处百病，调虚实，不可不通」。这句话把经络的分量说到了顶。",
+    "经络干三件事：运行气血、联络脏腑、沟通内外上下。",
+    "主干一共十二条，叫十二正经；另有八条特殊的，叫奇经八脉。"
+  ],
+  qs:[
+    {id:"q5-1",type:"tf",stem:"络脉是经脉分出来的支线，比经脉细，分布更广。",
+     opts:["对","错"], ans:0,
+     exp:"经脉是纵行主干，位置较深；络脉是分支，纵横交错，深浅都有。浮在浅层的叫浮络。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-216",
+       text:"络脉是经脉的分支，纵横交错，分布于全身深浅部位。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q5-2",type:"mc",stem:"以下关于经络的描述，哪一项是正确的？",
+     opts:["经络只运行血，不运行气","络脉是经脉的分支，纵横交错，分布于全身深浅部位","经脉只分布在皮肤表面，属于浅表结构","经络只联络内脏，不到四肢"], ans:1,
+     exp:"经络运行气血，不单运血。经脉是深部主干，络脉是分支铺开。经络既连脏腑，也通四肢百骸。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-216",
+       text:"经络包括经脉和络脉，经脉是纵行的主干，多循行于较深部位；络脉是经脉的分支。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q5-3",type:"tf",stem:"经络只负责运送气血，和脏腑没有关系。",
+     opts:["对","错"], ans:1,
+     exp:"经络一头连脏腑，一头通四肢体表，是内外上下的联络通道。只说运气血，漏掉了它最关键的联络作用。",
+     src:{book:"黄帝内经·灵枢",chapter:"经脉篇第十",
+       text:"经脉者，所以能决死生，处百病，调虚实，不可不通。",
+       url:"https://qihuang.vip/content-124089.html",type:"典籍原文"}}
+  ]
+},
+{
+  n:6, title:"病因", mins:4, sub:"外面六种、里面七种",
+  quotes:[
+    {book:"黄帝内经·素问",chapter:"举痛论篇第三十九",
+     text:"余知百病生于气也。",
+     url:"https://www.huangdineijing.org/docs/su_wen/ju-tong-lun/"},
+    {book:"黄帝内经·素问",chapter:"风论篇第四十二",
+     text:"风者，善行而数变。",
+     url:"https://www.huangdineijing.org/docs/su_wen/feng-lun/"}
+  ],
+  body:[
+    "中医把生病的原因分三类。",
+    "第一类从外面来，叫六淫：风、寒、暑、湿、燥、火。正常的气候叫六气。太过，或者不该来的时候来了，才叫六淫。",
+    "第二类从里面来，叫七情：喜、怒、忧、思、悲、恐、惊。情绪本身不致病，太过、太久才伤脏腑的气机。",
+    "《素问·举痛论》说「余知百病生于气也」。很多病起于气机乱了，不是起于某个零件坏了。",
+    "风邪最有特点。《素问·风论》说「风者，善行而数变」。风致病位置游走，变化快。",
+    "第三类是不内外因：饮食、劳逸、外伤、虫兽。"
+  ],
+  qs:[
+    {id:"q6-1",type:"mc",stem:"关于七情内伤，以下哪项说法是正确的？",
+     opts:["七情内伤是外部环境引起的脏腑气机失调","七情过度激动会导致脏腑气机失调，引发疾病","七情内伤只包括喜、怒、忧三种情绪","情绪调节对七情内伤没有作用"], ans:1,
+     exp:"七情是喜、怒、忧、思、悲、恐、惊七种，不是三种。它们从内部影响气机，太过就致病。情绪调节本身就是预防的一部分。",
+     src:{book:"haimol/TCM-Dataset · 中医基础理论",chapter:"题目编号 中医基础理论完整-321",
+       text:"七情过度激动会导致脏腑气机失调，引发疾病。",
+       url:"https://github.com/haimol/TCM-Dataset/blob/main/Generated-Data/%E4%B8%AD%E5%8C%BB%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA.json",type:"题库原题，解析已人工核对"}},
+    {id:"q6-2",type:"mc",stem:"《素问·风论》说「风者，善行而数变」，说的是风的什么特点？",
+     opts:["致病位置游走、变化快","只在冬天出现","只伤皮肤，不进身体","一定会让人发高烧"], ans:0,
+     exp:"善行是走得快、位置不定，数变是变化多。所以风致病常见游走性疼痛、症状忽轻忽重。",
+     src:{book:"黄帝内经·素问",chapter:"风论篇第四十二",
+       text:"风者，善行而数变，腠理开，则洒然寒，闭则热而闷。",
+       url:"https://www.huangdineijing.org/docs/su_wen/feng-lun/",type:"典籍原文"}},
+    {id:"q6-3",type:"tf",stem:"六气太过，或者不该来的时候来了，才叫六淫。",
+     opts:["对","错"], ans:0,
+     exp:"正常的气候叫六气，是身体能适应的。太过、不及、或者时令不对，才变成致病的六淫。",
+     src:{book:"黄帝内经·素问",chapter:"举痛论篇第三十九",text:"余知百病生于气也。",
+       url:"https://www.huangdineijing.org/docs/su_wen/ju-tong-lun/",type:"典籍原文"}}
+  ]
+},
+{
+  n:7, title:"四诊", mins:4, sub:"望闻问切，四个动作",
+  quotes:[
+    {book:"难经",chapter:"六十一难",
+     text:"望而知之谓之神，闻而知之谓之圣，问而知之谓之工，切脉而知之谓之巧。",
+     url:"https://gj.zdic.net/zibu/343/9477.html"},
+    {book:"黄帝内经·素问",chapter:"脉要精微论篇第十七",
+     text:"夫脉者，血之府也。",
+     url:"https://www.huangdineijing.org/docs/su_wen/mai-yao-jing-wei-lun/"}
+  ],
+  body:[
+    "四诊是望、闻、问、切，中医收集信息的四个动作。",
+    "望是看：看神色、形态、舌象。闻是听声音、嗅气味。问是问症状、病程、饮食睡眠。切是摸脉、按身体。",
+    "《难经·六十一难》给四者排了个座次：「望而知之谓之神，闻而知之谓之圣，问而知之谓之工，切脉而知之谓之巧。」",
+    "四诊要合起来看，不能只凭一个。只看脉、不看舌，容易看偏。",
+    "《素问·脉要精微论》说「夫脉者，血之府也」。脉是血的住所，摸脉摸的是血气的状态。"
+  ],
+  qs:[
+    {id:"q7-1",type:"tf",stem:"四诊里的「闻」，指听声音和嗅气味。",
+     opts:["对","错"], ans:0,
+     exp:"闻包括听和嗅两件事：听说话、呼吸、咳嗽的声音，嗅口气、体味、排出物的气味。",
+     src:{book:"难经",chapter:"六十一难",
+       text:"闻而知之者，闻其五音，以别其病。",
+       url:"https://gj.zdic.net/zibu/343/9477.html",type:"典籍原文"}},
+    {id:"q7-2",type:"mc",stem:"《难经·六十一难》把四诊分了等次，其中被称为「神」的是哪一诊？",
+     opts:["望","闻","问","切"], ans:0,
+     exp:"原文顺序是望为神、闻为圣、问为工、切为巧。望排在第一位，说的是看一眼就能明白的人最高明。",
+     src:{book:"难经",chapter:"六十一难",
+       text:"望而知之谓之神，闻而知之谓之圣，问而知之谓之工，切脉而知之谓之巧。",
+       url:"https://gj.zdic.net/zibu/343/9477.html",type:"典籍原文"}},
+    {id:"q7-3",type:"tf",stem:"只要脉摸得准，其他三诊可以不做。",
+     opts:["对","错"], ans:1,
+     exp:"四诊要合参。脉只是其中一项，还要看神色、听声音、问症状，单靠一项容易判断偏掉。",
+     src:{book:"难经",chapter:"六十一难",
+       text:"望而知之谓之神，闻而知之谓之圣，问而知之谓之工，切脉而知之谓之巧。",
+       url:"https://gj.zdic.net/zibu/343/9477.html",type:"典籍原文"}}
+  ]
+}
+];
+
+DAYS.forEach(function(d){
+  d.quotes.forEach(function(q,i){ SRC["d"+d.n+"q"+i]=q; });
+  d.qs.forEach(function(q){ SRC[q.id]=q.src; });
+});
+
+var QIDX={};
+DAYS.forEach(function(d){ d.qs.forEach(function(q){ QIDX[q.id]=q; }); });
+
+function defState(){ return {done:{},wrong:{},lastDate:null,streak:0,totalDone:0}; }
+var S=(function(){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(raw){ var o=JSON.parse(raw); if(o&&typeof o==="object"){
+      var base=defState();
+      ["done","wrong"].forEach(function(k){ if(!o[k]||typeof o[k]!=="object") o[k]=base[k]; });
+      ["lastDate","streak","totalDone"].forEach(function(k){ if(o[k]===undefined) o[k]=base[k]; });
+      return o;
+    } }
+  }catch(e){}
+  return defState();
+})();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+function pad(n){ return n<10?"0"+n:""+n; }
+function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function today(){ return ymd(new Date()); }
+function shift(s,n){ var d=new Date(s+"T00:00:00"); d.setDate(d.getDate()+n); return ymd(d); }
+
+function liveStreak(){
+  if(!S.lastDate) return 0;
+  var t=today();
+  if(S.lastDate===t || S.lastDate===shift(t,-1)) return S.streak;
+  return 0;
+}
+function learnedCount(){ return Object.keys(S.done).length; }
+function wrongCount(){ return Object.keys(S.wrong).length; }
+
+var app=document.getElementById("app");
+var tabbar=document.getElementById("tabs");
+var mask=document.getElementById("mask");
+var sheet=document.getElementById("sheet");
+var view={name:"today"};
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function setTabs(on){
+  Array.prototype.forEach.call(tabbar.querySelectorAll(".tab"),function(b){
+    b.classList.toggle("on", b.getAttribute("data-tab")===on);
+  });
+  tabbar.style.display = (on==="quiz"||on==="result") ? "none" : "flex";
+}
+
+function renderTop(){
+  var st=liveStreak();
+  var txt = st>0 ? ("连续 "+st+" 天") : ((S.totalDone||0)>0 ? "已断签" : "还没开始");
+  document.getElementById("streakTop").textContent = txt;
+}
+
+function render(){
+  renderTop();
+  if(view.name==="today") renderToday();
+  else if(view.name==="quiz") renderQuiz();
+  else if(view.name==="result") renderResult();
+  else if(view.name==="wrong") renderWrong();
+  else if(view.name==="me") renderMe();
+}
+
+function todayCard(d, doneToday){
+  var q0=d.quotes[0];
+  var quoteHtml='<div class="quote">'+esc(q0.text)+
+    '<span class="from">'+esc(q0.book)+" · "+esc(q0.chapter)+'</span></div>';
+  return '<div class="card">'+
+    '<div class="daynum">第 '+d.n+' 天 · 约 '+d.mins+' 分钟</div>'+
+    '<h1 class="title">'+esc(d.title)+'</h1>'+
+    '<div class="meta">'+esc(d.sub)+'</div>'+
+    '<div class="body">'+ d.body.map(function(p){ return "<p>"+esc(p)+"</p>"; }).join("") +'</div>'+
+    quoteHtml+
+    '<button class="srcbtn" data-src="d'+d.n+'q0">查看出处与原文 ›</button>'+
+    (doneToday
+      ? '<button class="btn ghost" id="reviewBtn">今天已完成 ✓　再练一遍</button>'
+      : '<button class="btn" id="startBtn">看完了，开始做题（'+d.qs.length+' 题）</button>')+
+    '<p class="disclaimer">学习参考，不是看病建议。</p>'+
+  '</div>';
+}
+
+function renderToday(){
+  var t=today();
+  var doneDay=S.done[t];
+  var allDone=learnedCount()>=DAYS.length;
+
+  if(doneDay){
+    var d=DAYS[doneDay-1];
+    app.innerHTML = todayCard(d,true) +
+      '<div class="card" style="margin-top:14px">'+
+        '<div class="row"><span class="k">连续学习</span><span class="v">'+liveStreak()+' 天</span></div>'+
+        '<div class="row"><span class="k">已学天数</span><span class="v">'+learnedCount()+' / 7</span></div>'+
+        '<div class="row"><span class="k">明天</span><span class="v">'+(d.n<7?("第 "+(d.n+1)+" 天"):"7 天已学完")+'</span></div>'+
+      '</div>'+
+      '<p class="disclaimer">学习参考，不是看病建议。</div>';
+    setTabs("today");
+    document.getElementById("reviewBtn").addEventListener("click",function(){
+      startQuiz(d,"review");
+    });
+    var sbDone=app.querySelector(".srcbtn");
+    if(sbDone) sbDone.addEventListener("click",function(){ openSrc(sbDone.getAttribute("data-src")); });
+    return;
+  }
+
+  var next = allDone ? DAYS[DAYS.length-1] : DAYS[Math.min(learnedCount(),DAYS.length-1)];
+  var extra = allDone ? '<div class="card" style="margin-top:14px"><div class="meta">7 天内容已全部学完。下面这一课可以反复复习，错题本里的题也可以单独考。</div></div>' : "";
+  app.innerHTML = (allDone?'<div class="daynum" style="margin:6px 0 8px">复习模式 · 7 天已学完</div>':"") +
+    todayCard(next,false) + extra;
+  setTabs("today");
+
+  var btn=document.getElementById("startBtn");
+  if(btn) btn.addEventListener("click",function(){ startQuiz(next,"daily"); });
+
+  var sb=app.querySelector(".srcbtn");
+  if(sb) sb.addEventListener("click",function(){ openSrc(sb.getAttribute("data-src")); });
+}
+
+var quiz=null;
+
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+function startQuiz(d,mode){
+  quiz={ day:d, mode:mode, list:d.qs, i:0, picked:null, res:[], wrongAdded:false };
+  view.name="quiz"; render();
+}
+
+function startWrongQuiz(){
+  var ids=Object.keys(S.wrong);
+  if(!ids.length) return;
+  var list=shuffle(ids).slice(0,5).map(function(id){ return QIDX[id]; });
+  quiz={ day:null, mode:"wrong", list:list, i:0, picked:null, res:[], wrongAdded:false };
+  view.name="quiz"; render();
+}
+
+function renderQuiz(){
+  setTabs("quiz");
+  var q=quiz.list[quiz.i];
+  var isTf = q.type==="tf";
+  var opts=q.opts.map(function(o,idx){
+    var cls="opt";
+    if(quiz.picked!==null){
+      if(idx===q.ans) cls+=" right";
+      else if(idx===quiz.picked) cls+=" wrongpick";
+    }
+    return '<button class="'+cls+'" data-idx="'+idx+'" '+(quiz.picked!==null?"disabled":"")+'>'+
+      (isTf?"":'<span class="lab">'+"ABCD"[idx]+'</span>')+esc(o)+'</button>';
+  }).join("");
+
+  var answered=quiz.picked!==null;
+  var ok=answered && quiz.picked===q.ans;
+  var expHtml="";
+  if(answered){
+    expHtml='<div class="expbox '+(ok?"ok":"err")+'">'+
+      '<div class="verdict">'+(ok?"答对了":"答错了，正确答案是 "+(isTf?"「"+q.opts[q.ans]+"」":("ABCD"[q.ans])))+'</div>'+
+      '<div>'+esc(q.exp)+'</div>'+
+      (ok
+        ? (quiz.mode==="wrong" && quiz.removed ? '<div class="addwrong" style="color:#3F6B52">答对，已移出错题本</div>' : "")
+        : '<div class="addwrong">已加入错题本</div>')+
+      '<button class="srcbtn" data-src="'+q.id+'" style="margin-top:8px">查看出处 ›</button>'+
+    '</div>';
+  }
+
+  var last = quiz.i===quiz.list.length-1;
+  app.innerHTML='<div class="qhead"><span>第 '+(quiz.i+1)+' 题 / 共 '+quiz.list.length+' 题</span>'+
+      '<span class="tag">'+(isTf?"判断题":"单选题")+'</span></div>'+
+    '<p class="stem">'+esc(q.stem)+'</p>'+
+    '<div id="opts">'+opts+'</div>'+
+    expHtml+
+    (answered?'<button class="btn" id="nextBtn">'+(last?"完成":"下一题")+'</button>':"")+
+    '<p class="disclaimer">学习参考，不是看病建议。</p>';
+
+  Array.prototype.forEach.call(app.querySelectorAll(".opt"),function(b){
+    b.addEventListener("click",function(){ pick(parseInt(b.getAttribute("data-idx"),10)); });
+  });
+  var sb=app.querySelector(".srcbtn");
+  if(sb) sb.addEventListener("click",function(){ openSrc(sb.getAttribute("data-src")); });
+  var nb=document.getElementById("nextBtn");
+  if(nb) nb.addEventListener("click",next);
+}
+
+function pick(idx){
+  if(quiz.picked!==null) return;
+  var q=quiz.list[quiz.i];
+  quiz.picked=idx;
+  var ok = idx===q.ans;
+  quiz.res.push({id:q.id,ok:ok});
+  if(!ok){
+    var w=S.wrong[q.id]||{count:0,last:null};
+    w.count++; w.last=today(); w.stem=q.stem; w.day=quiz.day?quiz.day.n:0;
+    S.wrong[q.id]=w;
+    quiz.wrongAdded=true;
+  } else if(quiz.mode==="wrong" && S.wrong[q.id]){
+    delete S.wrong[q.id];
+    quiz.removed=true;
+  }
+  save(); render();
+}
+
+function next(){
+  if(quiz.i<quiz.list.length-1){ quiz.i++; quiz.picked=null; quiz.wrongAdded=false; quiz.removed=false; renderQuiz(); }
+  else finish();
+}
+
+function finish(){
+  var right=quiz.res.filter(function(r){ return r.ok; }).length;
+  var t=today();
+  var isNew = false;
+  var streakNow = liveStreak();
+
+  if(quiz.mode==="daily" && !S.done[t]){
+    S.done[t]=quiz.day.n;
+    S.totalDone=(S.totalDone||0)+1;
+    if(S.lastDate===shift(t,-1)) streakNow=S.streak+1;
+    else streakNow=1;
+    S.streak=streakNow;
+    S.lastDate=t;
+    isNew=true;
+    save();
+  } else if(quiz.mode==="review"){
+    streakNow=S.streak;
+  } else {
+    streakNow=liveStreak();
+  }
+
+  view.name="result";
+  view.summary={ right:right, total:quiz.list.length, mode:quiz.mode, streak:streakNow, isNew:isNew, res:quiz.res };
+  render();
+}
+
+function renderResult(){
+  setTabs("result");
+  var s=view.summary;
+  var dots=s.res.map(function(r){ return '<span class="rdot '+(r.ok?"ok":"no")+'"></span>'; }).join("");
+  var title, sub;
+  if(s.mode==="wrong"){
+    title="错题考试结束"; sub="答对 "+s.right+" 题，答错的留在错题本里。";
+  } else if(s.isNew){
+    title="今天完成了 ✓"; sub="知识点看完、题也做完，这一天才算打卡。";
+  } else {
+    title="又练了一遍"; sub="今天已经打过卡，这次不计入天数。";
+  }
+  app.innerHTML='<div class="card">'+
+    '<h2 class="big">'+title+'</h2>'+
+    '<div class="meta">'+sub+'</div>'+
+    '<div class="dots">'+dots+'</div>'+
+    '<div class="row"><span class="k">答对</span><span class="v">'+s.right+' / '+s.total+'</span></div>'+
+    '<div class="row"><span class="k">连续学习</span><span class="v">'+s.streak+' 天</span></div>'+
+    '<div class="row"><span class="k">错题本</span><span class="v">'+wrongCount()+' 道</span></div>'+
+    '<button class="btn" id="goWrong">看看错题</button>'+
+    '<button class="btn ghost" id="goHome">回首页</button>'+
+    '<p class="disclaimer">学习参考，不是看病建议。</p>'+
+  '</div>';
+  document.getElementById("goHome").addEventListener("click",function(){ view.name="today"; render(); });
+  document.getElementById("goWrong").addEventListener("click",function(){ view.name="wrong"; render(); });
+}
+
+function renderWrong(){
+  setTabs("wrong");
+  var ids=Object.keys(S.wrong);
+  if(!ids.length){
+    app.innerHTML='<div class="card"><h2 class="big" style="font-size:22px">错题本</h2>'+
+      '<div class="empty">还没有错题。<br>答错的题会自动进这里，可以单独考试。</div>'+
+      '<p class="disclaimer">学习参考，不是看病建议。</p></div>';
+    return;
+  }
+  var rows=ids.map(function(id){
+    var w=S.wrong[id], q=QIDX[id];
+    if(!q) return "";
+    return '<div class="wq">'+
+      '<p class="qt">'+esc(q.stem)+'</p>'+
+      '<div class="qs">第 '+(w.day||"?")+' 天 · 答错 '+w.count+' 次</div>'+
+      '<button class="srcbtn" data-id="'+id+'">看答案与出处 ›</button>'+
+    '</div>';
+  }).join("");
+
+  app.innerHTML='<div class="card">'+
+    '<div class="meta">错题 '+ids.length+' 道</div>'+
+    '<h2 class="big" style="font-size:22px">只考错过的题</h2>'+
+    '<button class="btn" id="wrongExam">开始错题考试（最多 5 题）</button>'+
+  '</div>'+
+  '<div class="card" style="margin-top:14px">'+rows+'</div>'+
+  '<p class="disclaimer">学习参考，不是看病建议。</p>';
+
+  document.getElementById("wrongExam").addEventListener("click",startWrongQuiz);
+  Array.prototype.forEach.call(app.querySelectorAll(".srcbtn"),function(b){
+    b.addEventListener("click",function(){
+      var id=b.getAttribute("data-id");
+      var q=QIDX[id];
+      openSheet(
+        '<h3>'+esc(q.stem)+'</h3>'+
+        '<div class="book">正确答案：'+esc(q.type==="tf"?q.opts[q.ans]:("ABCD"[q.ans]+"　"+q.opts[q.ans]))+'</div>'+
+        '<div class="qtext">'+esc(q.exp)+'</div>'+
+        srcHtml(q.src)
+      );
+    });
+  });
+}
+
+function renderMe(){
+  setTabs("me");
+  app.innerHTML='<div class="card">'+
+    '<div class="row"><span class="k">连续学习</span><span class="v">'+liveStreak()+' 天</span></div>'+
+    '<div class="row"><span class="k">总打卡天数</span><span class="v">'+(S.totalDone||0)+' 天</span></div>'+
+    '<div class="row"><span class="k">已学课程</span><span class="v">'+learnedCount()+' / 7</span></div>'+
+    '<div class="row"><span class="k">错题</span><span class="v">'+wrongCount()+' 道</span></div>'+
+  '</div>'+
+  '<div class="card" style="margin-top:14px">'+
+    '<div class="meta">规则</div>'+
+    '<div class="body" style="font-size:16px">'+
+      '<p>每天看完一个知识点、做完当天的题，才算打卡。</p>'+
+      '<p>断一天，连续天数从零重新算。已学的课程不会因此回退。</p>'+
+      '<p>答错的题自动进错题本。错题考试答对，就移出错题本。</p>'+
+    '</div>'+
+  '</div>'+
+  '<div class="card" style="margin-top:14px">'+
+    '<div class="meta">数据存在哪里</div>'+
+    '<div class="body" style="font-size:16px"><p>全部存在这台手机的浏览器里，刷新不丢。换手机、清理浏览器缓存会丢，这个版本没有登录，也没有云端备份。</p></div>'+
+    '<button class="btn ghost small" id="resetBtn">清空全部数据，重新开始</button>'+
+  '</div>'+
+  '<p class="disclaimer">学习参考，不是看病建议。</p>';
+
+  document.getElementById("resetBtn").addEventListener("click",function(){
+    if(confirm("确定清空全部学习记录？清空后不能恢复。")){
+      S=defState(); save(); view.name="today"; render();
+    }
+  });
+}
+
+function openSheet(html){
+  sheet.innerHTML=html+'<button class="btn ghost closebtn" id="closeSheet">关闭</button>';
+  mask.classList.add("on");
+  document.getElementById("closeSheet").addEventListener("click",function(){ mask.classList.remove("on"); });
+}
+function srcHtml(s){
+  if(!s) return "";
+  var t="";
+  if(s.text) t='<div class="qtext">'+esc(s.text)+'</div>';
+  return '<div class="book" style="margin-top:16px">出处：'+esc(s.book)+" · "+esc(s.chapter)+'</div>'+
+    (s.type?'<div class="book">'+esc(s.type)+'</div>':"")+
+    t+
+    (s.url?'<div style="margin-top:12px"><a href="'+esc(s.url)+'" target="_blank" rel="noopener">打开原文链接 ›</a></div>':"");
+}
+function openSrc(key){
+  var s=SRC[key];
+  if(!s) return;
+  var body = (s.type?'<div class="book">'+esc(s.type)+'</div>':"")+
+    (s.text?'<div class="qtext">'+esc(s.text)+'</div>':"")+
+    (s.url?'<div style="margin-top:12px"><a href="'+esc(s.url)+'" target="_blank" rel="noopener">打开原文链接 ›</a></div>':"");
+  openSheet('<h3>'+esc(s.book)+" · "+esc(s.chapter)+'</h3>'+body);
+}
+mask.addEventListener("click",function(e){ if(e.target===mask) mask.classList.remove("on"); });
+
+Array.prototype.forEach.call(tabbar.querySelectorAll(".tab"),function(b){
+  b.addEventListener("click",function(){
+    var t=b.getAttribute("data-tab");
+    quiz=null;
+    view.name = (t==="today")?"today":(t==="wrong"?"wrong":"me");
+    render();
+  });
+});
+
+render();
+
+})();
+</script>
+</body>
+</html>
