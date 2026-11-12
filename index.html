@@ -80,6 +80,9 @@
   .sheet .qtext{font-family:"Songti SC",serif;font-size:16px;line-height:1.9;background:#F4EDDD;padding:14px;border-radius:10px;margin:12px 0}
   .sheet a{color:var(--accent);font-size:14px;word-break:break-all}
   .closebtn{margin-top:20px}
+  .inp{display:block;width:100%;margin:14px 0 0;padding:14px;font-size:15px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-family:ui-monospace,Menlo,monospace}
+  .steps{font-size:15px;line-height:1.9;color:#443F36;background:#F4EDDD;padding:14px;border-radius:10px;margin:10px 0}
+  .syncnote{font-size:13px;color:var(--sub);margin-top:10px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -386,7 +389,115 @@ var S=(function(){
   }catch(e){}
   return defState();
 })();
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+/* ---------- 云同步 ---------- */
+var SYKEY="tcm_sync_v1";
+var SY=(function(){
+  try{
+    var o=JSON.parse(localStorage.getItem(SYKEY)||"{}");
+    return {token:String(o.token||""),gist:String(o.gist||""),last:o.last||null};
+  }catch(e){ return {token:"",gist:"",last:null}; }
+})();
+function sySave(){ try{ localStorage.setItem(SYKEY,JSON.stringify(SY)); }catch(e){} }
+var sync={busy:false,msg:"",err:false};
+var syncTimer=null;
+var GFILE="tcm-daily-state.json";
+
+function payload(){ return {v:1,app:"tcm-daily",t:new Date().toISOString(),state:S}; }
+
+function ghFetch(path,opt){
+  opt=opt||{};
+  var h={"Accept":"application/vnd.github+json"};
+  if(SY.token) h["Authorization"]="Bearer "+SY.token;
+  var init={method:opt.method||"GET",headers:h};
+  if(opt.body){ h["Content-Type"]="application/json"; init.body=JSON.stringify(opt.body); }
+  return fetch("https://api.github.com"+path,init).then(function(r){
+    if(r.status===401||r.status===403) throw new Error("令牌无效或权限不够（要勾 gist 权限）");
+    if(r.status===404) throw new Error("404");
+    if(!r.ok) throw new Error("GitHub 返回 "+r.status);
+    return r.json();
+  });
+}
+
+function mergeIn(remote){
+  if(!remote||!remote.state) return false;
+  var r=remote.state, ch=false;
+  Object.keys(r.done||{}).forEach(function(d){
+    var cur=S.done[d], val=r.done[d];
+    if(cur===undefined||val>cur){ S.done[d]=val; ch=true; }
+  });
+  Object.keys(r.wrong||{}).forEach(function(id){
+    var b=r.wrong[id];
+    if(!b) return;
+    var a=S.wrong[id];
+    if(!a){ S.wrong[id]={count:b.count||1,last:b.last||null,stem:b.stem||"",day:b.day||0}; ch=true; return; }
+    var cnt=Math.max(a.count||0,b.count||0);
+    var last=(a.last||"")>(b.last||"")?(a.last||null):(b.last||a.last||null);
+    if(cnt!==a.count||last!==a.last){
+      a.count=cnt; a.last=last;
+      if(!a.stem) a.stem=b.stem||"";
+      if(!a.day) a.day=b.day||0;
+      ch=true;
+    }
+  });
+  var ld=S.lastDate||"", rd=r.lastDate||"";
+  if(rd>ld){ S.lastDate=rd; S.streak=Math.max(1,r.streak||1); ch=true; }
+  else if(rd&&rd===ld&&(r.streak||0)>S.streak){ S.streak=r.streak; ch=true; }
+  var td=Object.keys(S.done).length;
+  if(td!==(S.totalDone||0)){ S.totalDone=td; ch=true; }
+  return ch;
+}
+
+function refreshSyncUI(){
+  var m=document.getElementById("syMsg");
+  if(m){ m.textContent=sync.msg||(sync.busy?"同步中…":"待同步"); m.style.color=sync.err?"#9A3B2E":"#6B6459"; }
+  var l=document.getElementById("syLast");
+  if(l&&SY.last){ l.textContent=new Date(SY.last).toLocaleString("zh-CN",{hour12:false,hour:"2-digit",minute:"2-digit"}); }
+}
+
+function doSync(){
+  if(!SY.token||sync.busy) return;
+  sync.busy=true; sync.err=false; sync.msg="同步中…"; refreshSyncUI();
+
+  var first;
+  if(SY.gist){
+    first=ghFetch("/gists/"+SY.gist).then(function(g){
+      var f=g&&g.files&&g.files[GFILE];
+      if(f&&f.content){ try{ if(mergeIn(JSON.parse(f.content))) saveLocal(); }catch(e){} }
+      return g;
+    }).catch(function(e){
+      if(e&&e.message==="404"){ SY.gist=""; sySave(); return null; }
+      throw e;
+    });
+  } else {
+    first=Promise.resolve(null);
+  }
+
+  first.then(function(){
+    var body={files:{}};
+    body.files[GFILE]={content:JSON.stringify(payload())};
+    if(SY.gist) return ghFetch("/gists/"+SY.gist,{method:"PATCH",body:body});
+    body.description="中医每日学习 · 同步数据，请勿删除";
+    body.public=false;
+    return ghFetch("/gists",{method:"POST",body:body});
+  }).then(function(g){
+    if(g&&g.id) SY.gist=g.id;
+    SY.last=new Date().toISOString(); sySave();
+    sync.busy=false; sync.err=false;
+    sync.msg="已同步";
+    refreshSyncUI(); render();
+  }).catch(function(e){
+    sync.busy=false; sync.err=true;
+    sync.msg="同步失败："+(e&&e.message?e.message:"网络不通");
+    refreshSyncUI();
+  });
+}
+
+function saveLocal(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function save(){
+  saveLocal();
+  if(SY.token){ clearTimeout(syncTimer); syncTimer=setTimeout(doSync,2500); }
+}
 
 function pad(n){ return n<10?"0"+n:""+n; }
 function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
@@ -683,17 +794,73 @@ function renderMe(){
       '<p>答错的题自动进错题本。错题考试答对，就移出错题本。</p>'+
     '</div>'+
   '</div>'+
+  syncCardHtml()+
   '<div class="card" style="margin-top:14px">'+
     '<div class="meta">数据存在哪里</div>'+
-    '<div class="body" style="font-size:16px"><p>全部存在这台手机的浏览器里，刷新不丢。换手机、清理浏览器缓存会丢，这个版本没有登录，也没有云端备份。</p></div>'+
-    '<button class="btn ghost small" id="resetBtn">清空全部数据，重新开始</button>'+
+    '<div class="body" style="font-size:16px"><p>每台手机各存一份在浏览器里，刷新不丢。开了云同步，两台设备的进度会自动对上；没开的话，换手机、清浏览器缓存就会丢。</p></div>'+
+    '<button class="btn ghost small" id="resetBtn">清空本机数据，重新开始</button>'+
   '</div>'+
   '<p class="disclaimer">学习参考，不是看病建议。</p>';
 
   document.getElementById("resetBtn").addEventListener("click",function(){
-    if(confirm("确定清空全部学习记录？清空后不能恢复。")){
-      S=defState(); save(); view.name="today"; render();
+    if(confirm("确定清空这台手机上的学习记录？清空后不能恢复。")){
+      S=defState(); saveLocal(); view.name="today"; render();
     }
+  });
+  var syOn=document.getElementById("syOn");
+  if(syOn) syOn.addEventListener("click",openTokenSheet);
+  var syNow=document.getElementById("syNow");
+  if(syNow) syNow.addEventListener("click",function(){ doSync(); });
+  var syOff=document.getElementById("syOff");
+  if(syOff) syOff.addEventListener("click",function(){
+    if(confirm("关闭云同步？这台手机的进度不会被删，只是以后不再自动同步。")){
+      SY.token=""; SY.gist=""; SY.last=null; sySave(); sync.msg=""; sync.err=false; render();
+    }
+  });
+}
+
+function syncCardHtml(){
+  if(!SY.token){
+    return '<div class="card" style="margin-top:14px">'+
+      '<div class="meta">云同步 · 未开启</div>'+
+      '<div class="body" style="font-size:16px"><p>开启后，进度会自动存到你自己的 GitHub 私有 gist 里。换手机时填同一个令牌，进度就回来了。不花钱，不用另外注册账号。</p></div>'+
+      '<button class="btn small" id="syOn">开启云同步</button>'+
+    '</div>';
+  }
+  return '<div class="card" style="margin-top:14px">'+
+    '<div class="row"><span class="k">云同步</span><span class="v" style="color:#3F6B52">已开启</span></div>'+
+    '<div class="row"><span class="k">上次同步</span><span class="v" style="font-size:15px" id="syLast">'+(SY.last?new Date(SY.last).toLocaleString("zh-CN",{hour12:false,hour:"2-digit",minute:"2-digit"}):"还没同步")+'</span></div>'+
+    '<div class="row"><span class="k">状态</span><span class="v" style="font-size:15px;color:'+(sync.err?"#9A3B2E":"#6B6459")+'" id="syMsg">'+esc(sync.msg||"待同步")+'</span></div>'+
+    '<button class="btn small" id="syNow">立即同步</button>'+
+    '<button class="btn ghost small" id="syOff">关闭云同步（不动数据）</button>'+
+  '</div>';
+}
+
+function openTokenSheet(){
+  openSheet('<h3>开启云同步</h3>'+
+    '<div class="book">需要一串 GitHub 令牌，权限只给 gist。全程免费。</div>'+
+    '<div class="steps">'+
+      '1. 浏览器打开 github.com/settings/tokens/new<br>'+
+      '2. Note 随便写，比如 tcm-daily<br>'+
+      '3. Expiration 选 No expiration<br>'+
+      '4. 只勾选 gist 这一项，别的都不要勾<br>'+
+      '5. 滑到底点 Generate token，复制 ghp_ 开头的那串'+
+    '</div>'+
+    '<input class="inp" id="tokInp" type="text" placeholder="粘贴 ghp_ 开头的令牌" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<div class="syncnote">令牌只存在这台手机的浏览器里，不会写进网页代码，也不会发给别人。想停用，随时去 GitHub 把这个令牌删掉。</div>'+
+    '<button class="btn" id="tokOk">保存并开始同步</button>');
+  var inp=document.getElementById("tokInp");
+  var ok=document.getElementById("tokOk");
+  if(ok) ok.addEventListener("click",function(){
+    var v=(inp.value||"").trim();
+    if(!/^(gh[pousr]_)?[A-Za-z0-9_]{20,}$/.test(v)){
+      alert("这串看起来不像 GitHub 令牌，请重新复制一次。");
+      return;
+    }
+    SY.token=v; SY.gist=""; SY.last=null; sySave();
+    mask.classList.remove("on");
+    view.name="me"; render();
+    doSync();
   });
 }
 
@@ -731,6 +898,8 @@ Array.prototype.forEach.call(tabbar.querySelectorAll(".tab"),function(b){
 });
 
 render();
+
+if(SY.token){ setTimeout(function(){ doSync(); },600); }
 
 })();
 </script>
